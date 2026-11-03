@@ -1,0 +1,22 @@
+{
+  "reference": "Level 1.png",
+  "width": 224,
+  "height": 257,
+  "tileSize": 8,
+  "platforms": [
+    { "x": 88, "y": 57, "tiles": 6, "frame": "girder-pink" },
+    { "x": 0, "y": 85, "tiles": 26, "frame": "girder-pink" },
+    { "x": 16, "y": 110, "tiles": 26, "frame": "girder-pink" },
+    { "x": 0, "y": 143, "tiles": 26, "frame": "girder-pink" },
+    { "x": 16, "y": 176, "tiles": 26, "frame": "girder-pink" },
+    { "x": 0, "y": 209, "tiles": 26, "frame": "girder-pink" },
+    { "x": 0, "y": 242, "tiles": 28, "frame": "girder-pink" }
+  ],
+  "ladders": [
+    { "x": 64, "y": 33, "height": 52, "frame": "ladder-cyan" },
+    { "x": 80, "y": 33, "height": 52, "frame": "ladder-cyan" },
+    { "x": 128, "y": 65, "height": 20, "frame": "ladder-cyan" },
+    { "x": 112, "y": 93, "height": 149, "frame": "ladder-cyan" },
+    { "x": 128, "y": 93, "height": 149, "frame": "ladder-cyan" }
+  ]
+}

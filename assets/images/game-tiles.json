@@ -1,0 +1,19 @@
+{
+  "frames": {
+    "girder-pink": { "frame": { "x": 0, "y": 0, "w": 8, "h": 8 } },
+    "ladder-cyan": { "frame": { "x": 8, "y": 0, "w": 8, "h": 8 } },
+    "girder-orange": { "frame": { "x": 16, "y": 0, "w": 8, "h": 8 } },
+    "conveyor-orange": { "frame": { "x": 24, "y": 0, "w": 8, "h": 8 } },
+    "cross-brace-orange": { "frame": { "x": 32, "y": 0, "w": 8, "h": 8 } },
+    "ladder-white": { "frame": { "x": 40, "y": 0, "w": 8, "h": 8 } },
+    "girder-blue": { "frame": { "x": 48, "y": 0, "w": 8, "h": 8 } },
+    "ladder-yellow": { "frame": { "x": 56, "y": 0, "w": 8, "h": 8 } },
+    "girder-peach": { "frame": { "x": 64, "y": 0, "w": 8, "h": 8 } },
+    "ladder-blue": { "frame": { "x": 72, "y": 0, "w": 8, "h": 8 } }
+  },
+  "meta": {
+    "image": "game-tiles.png",
+    "size": { "w": 80, "h": 8 },
+    "scale": "1"
+  }
+}

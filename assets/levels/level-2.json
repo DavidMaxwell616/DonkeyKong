@@ -1,0 +1,62 @@
+{
+  "reference": "level 2.png",
+  "width": 224,
+  "height": 256,
+  "tileSize": 8,
+  "tiles": {
+    "girder": "girder-orange",
+    "conveyor": "conveyor-orange",
+    "oil-support": "cross-brace-orange",
+    "ladder": "ladder-white",
+    "belt-return": "ladder-white"
+  },
+  "platforms": [
+    { "x": 88, "y": 56, "tiles": 6, "frame": "girder" },
+    { "x": 8, "y": 88, "tiles": 26, "frame": "conveyor" },
+    { "x": 0, "y": 128, "tiles": 13, "frame": "conveyor" },
+    { "x": 120, "y": 128, "tiles": 13, "frame": "conveyor" },
+    { "x": 8, "y": 168, "tiles": 5, "frame": "girder" },
+    { "x": 56, "y": 168, "tiles": 12, "frame": "girder" },
+    { "x": 160, "y": 168, "tiles": 7, "frame": "girder" },
+    { "x": 8, "y": 208, "tiles": 26, "frame": "conveyor" },
+    { "x": 0, "y": 248, "tiles": 28, "frame": "girder" }
+  ],
+  "supports": [
+    { "x": 96, "y": 144, "columns": 4, "rows": 3, "frame": "oil-support" }
+  ],
+  "ladders": [
+    { "x": 64, "y": 32, "height": 56 },
+    { "x": 80, "y": 32, "height": 56 },
+    { "x": 128, "y": 64, "height": 24 },
+    { "x": 16, "y": 96, "height": 32, "folding": true },
+    { "x": 200, "y": 96, "height": 32, "folding": true },
+    { "x": 24, "y": 136, "height": 32 },
+    { "x": 80, "y": 136, "height": 32 },
+    { "x": 136, "y": 136, "height": 32 },
+    { "x": 192, "y": 136, "height": 32 },
+    { "x": 64, "y": 176, "height": 32 },
+    { "x": 144, "y": 176, "height": 32 },
+    { "x": 24, "y": 216, "height": 32 },
+    { "x": 80, "y": 216, "height": 32 },
+    { "x": 136, "y": 216, "height": 32 },
+    { "x": 192, "y": 216, "height": 32 }
+  ],
+  "beltReturns": [],
+  "objects": [
+    { "name": "top-left-roller", "x": 2, "y": 88, "width": 12, "height": 8 },
+    { "name": "top-right-roller", "x": 210, "y": 88, "width": 12, "height": 8 },
+    { "name": "middle-left-roller", "x": 94, "y": 128, "width": 12, "height": 8 },
+    { "name": "middle-right-roller", "x": 118, "y": 128, "width": 12, "height": 8 },
+    { "name": "bottom-left-roller", "x": 2, "y": 208, "width": 12, "height": 8 },
+    { "name": "bottom-right-roller", "x": 210, "y": 208, "width": 12, "height": 8 },
+    { "name": "oil-drum", "x": 104, "y": 112, "width": 16, "height": 33 },
+    { "name": "hammer-upper", "x": 16, "y": 137, "width": 8, "height": 16 },
+    { "name": "hammer-lower", "x": 104, "y": 177, "width": 8, "height": 16 },
+    { "name": "hat", "x": 60, "y": 158, "width": 16, "height": 10 },
+    { "name": "umbrella", "x": 192, "y": 152, "width": 16, "height": 16 },
+    { "name": "purse", "x": 118, "y": 237, "width": 12, "height": 11 },
+    { "name": "kong", "x": 48, "y": 56, "width": 40, "height": 32 },
+    { "name": "pauline", "x": 88, "y": 32, "width": 16, "height": 24 },
+    { "name": "mario", "x": 56, "y": 232, "width": 16, "height": 16 }
+  ]
+}
