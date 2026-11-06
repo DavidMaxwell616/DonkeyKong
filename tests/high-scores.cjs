@@ -1,0 +1,31 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+let saved;
+const storage = { getItem: () => saved ?? null, setItem: (key, value) => { saved = value; } };
+const source = fs.readFileSync('js/HighScores.js', 'utf8').replace(/export function/g, 'function') + '\n({beginScoreRun, recordScore, getHighScores});';
+const load = localStorage => vm.runInNewContext(source, { localStorage });
+const scores = load(storage);
+scores.beginScoreRun(); scores.recordScore(100); scores.recordScore(300); scores.recordScore(200);
+assert.equal(scores.getHighScores().length, 1);
+assert.equal(scores.getHighScores()[0].score, 300);
+for (const score of [100, 500, 200, 800, 400, 600]) { scores.beginScoreRun(); scores.recordScore(score); }
+assert.equal(JSON.stringify(scores.getHighScores().map(s => s.score)), '[800,600,500,400,300]');
+assert.equal(load(storage).getHighScores()[0].score, 800);
+const unavailable = load({ getItem() { throw Error(); }, setItem() { throw Error(); } });
+unavailable.recordScore(50);
+assert.equal(unavailable.getHighScores()[0].score, 50);
+console.log('PASS: score persistence, ranking, one entry per run, storage fallback');
+const Scene = vm.runInNewContext(fs.readFileSync('js/Splashscene.js', 'utf8').replace(/^import .*;\r?\n/gm, '').replace('export default class SplashScene', 'class SplashScene') + '\nSplashScene;', { Phaser: { Scene: class {} }, getHighScores: scores.getHighScores });
+const scene = new Scene();
+const glyphs = [], frames = [];
+scene.add = { container: () => ({ add() {}, setScale() { return this; }, setPosition() { return this; } }),
+    image: (x,y,key,char) => ({ setOrigin() { return this; }, setTint(color) { glyphs.push({x,y,char,color}); return this; } }) };
+scene.textures = { get: () => ({ has: () => false, add: (...args) => frames.push(args) }) };
+scene.scale = { width: 800, height: 500, on() {}, off() {} }; scene.events = { once() {} };
+scene.showInsertCoin();
+assert.equal(frames.length, 36);
+assert.equal(glyphs.filter(g => g.y === 160 && g.x >= 48 && g.x < 96).map(g => g.char).join(''), '000800');
+assert(glyphs.some(g => g.color === 0x00ffff));
+assert(glyphs.some(g => g.color === 0xffff00));
+console.log('PASS: insert coin font mapping, live score table and tints');

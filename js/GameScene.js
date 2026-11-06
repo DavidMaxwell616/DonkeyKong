@@ -1,6 +1,6 @@
 import createKongAnimations from './KongAnimations.js';
 import createBarrelAnimations from './BarrelAnimations.js';
-import createMarioAnimations from './MarioAnimations.js';
+import createMarioAnimations, { showLadderTransition } from './MarioAnimations.js';
 import createPaulineAnimations from './PaulineAnimations.js';
 import MarioPhysics from './MarioPhysics.js';
 import GameHud from './GameHud.js';
@@ -30,7 +30,8 @@ export default class GameScene extends Phaser.Scene {
             frameWidth: 18,
             frameHeight: 18
         });
-        this.load.image('scorefont', 'assets/images/scorefont.png');
+        this.load.image('scorefont', 'assets/images/kongfont.png');
+        this.load.image('random-sprites', 'assets/images/random-sprites.png');
         this.load.image('life-icon', 'assets/images/lives.png');
         this.load.spritesheet('mario', 'assets/images/mario.png', {
             frameWidth: 18,
@@ -62,6 +63,7 @@ export default class GameScene extends Phaser.Scene {
         this.marioPhysics = null;
         this.barrelThrowTimer = null;
         this.barrels = new Set();
+        this.jumpScoredBarrels = new Set();
         this.endingStarted = false;
         this.fireHunters = null;
         this.heldHammer = null;
@@ -226,7 +228,7 @@ export default class GameScene extends Phaser.Scene {
         this.paulineGirder = miniGirder;
         const paulineTexture = this.textures.get('pauline');
         if (!paulineTexture.has('heart')) paulineTexture.add('heart', 0, 110, 9, 15, 13);
-        if (!paulineTexture.has('broken-heart')) paulineTexture.add('broken-heart', 0, 128, 9, 15, 13);
+        if (!paulineTexture.has('broken-heart')) paulineTexture.add('broken-heart', 0, 127, 9, 16, 13);
         this.heart = this.add.image(0, 0, 'pauline', 'heart').setVisible(false);
         this.level.add(this.heart);
         this.level.bringToTop(this.kong);
@@ -359,7 +361,7 @@ export default class GameScene extends Phaser.Scene {
                 barrel.destroy();
                 this.steelBarrel = null;
                 this.oilFlame.setVisible(true).play('oil-flame');
-                this.fireHunters = new FireHunters(this);
+                this.fireHunters = new FireHunters(this, { initialSpawnDelay: 1500 });
                 this.startBarrelThrows();
             }
         });
@@ -512,6 +514,23 @@ export default class GameScene extends Phaser.Scene {
         }
     }
 
+    updateBarrelJumpScore() {
+        if (!this.marioPhysics.isJumping) {
+            this.jumpScoredBarrels.clear();
+            return;
+        }
+        for (const barrel of this.barrels) {
+            const clearance = barrel.y - this.mario.y;
+            if (!barrel.active || this.jumpScoredBarrels.has(barrel) ||
+                Math.abs(this.mario.x - barrel.x) > 5 || clearance < 10 || clearance > 30) continue;
+            this.jumpScoredBarrels.add(barrel);
+            // The second barrel brings this jump's total from 100 to 300.
+            const points = this.jumpScoredBarrels.size === 2 ? 200 : 100;
+            const score = this.hud.values.score + points;
+            this.hud.setValues({ score, highScore: Math.max(score, this.hud.values.highScore) });
+        }
+    }
+
     update(time, delta) {
         if (this.paulineHelp && this.pauline) {
             const yelling = this.pauline.anims.isPlaying &&
@@ -550,7 +569,9 @@ export default class GameScene extends Phaser.Scene {
         } else {
             this.mario.play('mario-idle', true);
         }
+        showLadderTransition(this.mario, this.marioPhysics);
         if (this.checkEnemyCollision()) return;
+        this.updateBarrelJumpScore();
         this.updateHeart();
     }
 
@@ -714,7 +735,8 @@ export default class GameScene extends Phaser.Scene {
         // Use the reference's prop artwork at native resolution.
         const props = this.textures.get('level-1-props');
         if (!props.has('hammer')) props.add('hammer', 0, 17, 98, 9, 10);
-        if (!props.has('oil-drum')) props.add('oil-drum', 0, 16, 232, 16, 16);
+        const randomSprites = this.textures.get('random-sprites');
+        if (!randomSprites.has('oil-drum')) randomSprites.add('oil-drum', 0, 127, 0, 16, 17);
         if (!props.has('barrel-stack')) props.add('barrel-stack', 0, 0, 51, 20, 32);
         this.barrelStack = this.add.image(details.barrelStack.x, details.barrelStack.y,
             'level-1-props', 'barrel-stack').setOrigin(0);
@@ -724,19 +746,19 @@ export default class GameScene extends Phaser.Scene {
             this.levelDetails.add(hammer);
             return hammer;
         });
-        this.oilBarrel = this.add.image(details.oilBarrel.x, details.oilBarrel.y + 8,
-            'level-1-props', 'oil-drum').setOrigin(0);
+        this.oilBarrel = this.add.image(details.oilBarrel.x, details.oilBarrel.y + 7,
+            'random-sprites', 'oil-drum').setOrigin(0);
         this.levelDetails.add(this.oilBarrel);
         if (!this.anims.exists('oil-flame')) {
             this.anims.create({
                 key: 'oil-flame',
-                frames: this.anims.generateFrameNumbers('fire', { start: 9, end: 12 }),
+                frames: this.anims.generateFrameNumbers('fire', { start: 8, end: 11 }),
                 frameRate: 8,
                 repeat: -1
             });
         }
         this.oilFlame = this.add.sprite(this.oilBarrel.x + this.oilBarrel.width / 2,
-            this.oilBarrel.y + 2, 'fire', 9).setOrigin(0.5, 1).setVisible(false);
+            this.oilBarrel.y + 2, 'fire', 8).setOrigin(0.5, 1).setVisible(false);
         this.levelDetails.add(this.oilFlame);
 
         const level = this.cache.json.get('level-1');

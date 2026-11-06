@@ -7,8 +7,8 @@ export default function createKongAnimations(anims) {
         { key: 'kong-laugh', frames: [0, 1], frameRate: 6, repeat: -1 },
         {
             key: 'kong-chest-beat',
-            frames: [0, 2, 0, 3],
-            frameRate: 6, repeat: -1
+            frames: [0, 0, 0, 0, 0, 0, 0, 2, 0, 3, 0, 2, 0, 3],
+            frameRate: 5, repeat: -1
         },
         {
             key: 'kong-drop', frames: [0, 4, 5, 0],
@@ -27,8 +27,8 @@ export default function createKongAnimations(anims) {
             frameRate: 6, repeat: -1
         },
         {
-            key: 'kong-defeat', frames: [16, 17, 18, 19],
-            frameRate: 5, repeat: 0
+            key: 'kong-defeat', frames: [17, 18, 19],
+            frameRate: 5, repeat: -1
         }
     ];
 

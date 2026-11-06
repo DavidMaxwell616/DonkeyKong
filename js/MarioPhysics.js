@@ -2,7 +2,7 @@ const PIXELS_PER_METER = 16;
 const STEP = 1 / 60;
 
 export default class MarioPhysics {
-    constructor(platformTiles, tileSize, x, feetY, ladders = [], surfaceVelocity = () => 0, obstacles = []) {
+    constructor(platformTiles, tileSize, x, feetY, ladders = [], surfaceVelocity = () => 0, obstacles = [], options = {}) {
         const { World, Vec2, Box, Circle } = planck;
         this.world = new World(Vec2(0, 30));
         this.accumulator = 0;
@@ -31,11 +31,18 @@ export default class MarioPhysics {
         const meters = value => value / PIXELS_PER_METER;
 
         for (const row of platformTiles) {
-            for (const tile of row) {
+            const surfaces = [];
+            for (const tile of [...row].sort((a, b) => a.x - b.x)) {
+                const previous = surfaces[surfaces.length - 1];
+                if (options.mergeFlatPlatforms && previous && previous.y === tile.y &&
+                    previous.x + previous.width === tile.x) previous.width += tileSize;
+                else surfaces.push({ x: tile.x, y: tile.y, width: tileSize });
+            }
+            for (const tile of surfaces) {
                 const floor = this.world.createBody({
-                    position: Vec2(meters(tile.x + tileSize / 2), meters(tile.y + tileSize / 2))
+                    position: Vec2(meters(tile.x + tile.width / 2), meters(tile.y + tileSize / 2))
                 });
-                floor.createFixture(Box(meters(tileSize / 2), meters(tileSize / 2)), {
+                floor.createFixture(Box(meters(tile.width / 2), meters(tileSize / 2)), {
                     friction: 0,
                     restitution: 0,
                     userData: { platformTop: tile.y }
@@ -76,6 +83,15 @@ export default class MarioPhysics {
                 contact.setEnabled(false);
             }
         });
+    }
+
+    get ladderTransitionFrame() {
+        if (!this.climb || this.climb.platform === undefined) return null;
+        const feetY = this.body.getPosition().y * PIXELS_PER_METER + this.halfHeight;
+        const distance = feetY - this.climb.top;
+        if (distance > 16) return null;
+        // Position drives the pose, so descending reverses it and stopping holds it.
+        return 7 + Math.min(3, Math.max(0, Math.floor((16 - distance) / 4)));
     }
 
     get grounded() {

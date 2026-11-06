@@ -5,24 +5,27 @@ export default class IntermissionScene extends Phaser.Scene {
 
     preload() {
         this.load.image('how-high', 'assets/images/how-high.png');
-        this.load.image('scorefont', 'assets/images/scorefont.png');
+        this.load.image('scorefont', 'assets/images/kongfont.png');
     }
 
     create(data = {}) {
         this.cameras.main.setBackgroundColor('#000000');
         const screen = this.add.container(0, 0);
-        const background = this.add.image(0, 0, 'how-high').setOrigin(0);
+        // Named tier frames persist between visits; always select the full image.
+        const background = this.add.image(0, 0, 'how-high', '__BASE').setOrigin(0);
         screen.add(background);
-        if (data.height === 50) {
+        const targetHeight = data.height ?? 25;
+        for (let tierHeight = 50; tierHeight <= targetHeight; tierHeight += 25) {
             const reference = this.textures.get('how-high');
             if (!reference.has('tier')) reference.add('tier', 0, 40, 200, 96, 32);
-            screen.add(this.add.image(40, 160, 'how-high', 'tier').setOrigin(0));
-            screen.add(this.add.rectangle(40, 184, 16, 8, 0x000000).setOrigin(0));
+            const tierY = 200 - (tierHeight / 25 - 1) * 40;
+            screen.add(this.add.image(40, tierY, 'how-high', 'tier').setOrigin(0));
+            screen.add(this.add.rectangle(40, tierY + 24, 24, 8, 0x000000).setOrigin(0));
             const font = this.textures.get('scorefont');
-            for (const [index, digit] of [5, 0].entries()) {
+            for (const [index, digit] of [...String(tierHeight)].entries()) {
                 const frame = `intermission-${digit}`;
                 if (!font.has(frame)) font.add(frame, 0, digit * 8, 0, 8, 7);
-                screen.add(this.add.image(40 + index * 8, 184, 'scorefont', frame).setOrigin(0));
+                screen.add(this.add.image(40 + index * 8, tierY + 24, 'scorefont', frame).setOrigin(0));
             }
         }
         const fitScreen = () => {
@@ -35,10 +38,11 @@ export default class IntermissionScene extends Phaser.Scene {
         fitScreen();
         this.scale.on('resize', fitScreen);
 
-        const timer = data.resumeGame === false && data.height !== 50 ? null : this.time.delayedCall(3000, () => {
-            if (data.height === 50) {
-                this.scene.stop('GameScene');
-                this.scene.start('Level2Scene', { hudValues: data.hudValues });
+        const nextScene = data.nextScene ?? (data.height === 50 ? 'Level2Scene' : null);
+        const timer = data.resumeGame === false && !nextScene ? null : this.time.delayedCall(3000, () => {
+            if (nextScene) {
+                this.scene.stop(data.previousScene ?? 'GameScene');
+                this.scene.start(nextScene, { hudValues: data.hudValues });
                 return;
             }
             this.scene.wake('GameScene');

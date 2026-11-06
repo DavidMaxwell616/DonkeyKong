@@ -1,3 +1,5 @@
+import { recordScore, getHighScores } from './HighScores.js';
+
 export default class GameHud {
     constructor(scene, parent) {
         this.scene = scene;
@@ -7,10 +9,10 @@ export default class GameHud {
         this.values = { score: 0, highScore: 0, lives: 3, level: 1, bonus: 0 };
 
         const font = scene.textures.get('scorefont');
-        for (const [color, y] of [['white', 0], ['blue', 8], ['cyan', 16]]) {
+        for (const color of ['white', 'blue', 'cyan']) {
             for (let digit = 0; digit < 10; digit++) {
                 const name = `${color}-${digit}`;
-                if (!font.has(name)) font.add(name, 0, digit * 8, y, 8, 7);
+                if (!font.has(name)) font.add(name, 0, digit * 8, 0, 8, 7);
             }
         }
         const reference = scene.textures.get('level-1-props');
@@ -26,6 +28,8 @@ export default class GameHud {
 
     setValues(values) {
         Object.assign(this.values, values);
+        recordScore(this.values.score);
+        this.values.highScore = Math.max(this.values.highScore, getHighScores()[0]?.score ?? 0);
         this.container.removeAll(true);
         const add = (x, y, texture, frame) => {
             this.container.add(this.scene.add.image(x, y, texture, frame).setOrigin(0));

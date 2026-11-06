@@ -2,7 +2,7 @@ import GameHud from './GameHud.js';
 import createRollerAnimations from './RollerAnimations.js';
 import createKongAnimations from './KongAnimations.js';
 import createPaulineAnimations from './PaulineAnimations.js';
-import createMarioAnimations from './MarioAnimations.js';
+import createMarioAnimations, { showLadderTransition } from './MarioAnimations.js';
 import MarioPhysics from './MarioPhysics.js';
 import FireHunters from './FireHunters.js';
 import { GODMODE } from './DebugConfig.js';
@@ -17,15 +17,13 @@ export default class Level2Scene extends Phaser.Scene {
         this.load.spritesheet('hammer', 'assets/images/hammer.png', {
             frameWidth: 18, frameHeight: 18
         });
-        this.load.image('scorefont', 'assets/images/scorefont.png');
+        this.load.image('scorefont', 'assets/images/kongfont.png');
         this.load.image('pickup-scores', 'assets/images/scores.png');
         this.load.image('life-icon', 'assets/images/lives.png');
         this.load.image('level-1-props', 'assets/images/sample 2.png');
         this.load.atlas('game-tiles', 'assets/images/game-tiles.png', 'assets/images/game-tiles.json');
         this.load.json('level-2', 'assets/levels/level-2.json');
-        this.load.image('level-2-art', 'assets/images/level 2.png');
-        this.load.image('level-2-objects', 'assets/images/Level-2-objects.png');
-        this.load.image('level-2-pie', 'assets/images/random sprites.png');
+        this.load.image('level-2-pie', 'assets/images/random-sprites.png');
         this.load.spritesheet('mario', 'assets/images/mario.png', {
             frameWidth: 18,
             frameHeight: 18
@@ -74,7 +72,7 @@ export default class Level2Scene extends Phaser.Scene {
         if (!this.anims.exists('oil-flame')) {
             this.anims.create({
                 key: 'oil-flame',
-                frames: this.anims.generateFrameNumbers('fire', { start: 9, end: 12 }),
+                frames: this.anims.generateFrameNumbers('fire', { start: 8, end: 11 }),
                 frameRate: 8,
                 repeat: -1
             });
@@ -83,33 +81,32 @@ export default class Level2Scene extends Phaser.Scene {
         this.paulineGirder = layout.platforms.reduce((top, platform) => platform.y < top.y ? platform : top);
         const paulineTexture = this.textures.get('pauline');
         if (!paulineTexture.has('heart')) paulineTexture.add('heart', 0, 110, 9, 15, 13);
-        if (!paulineTexture.has('broken-heart')) paulineTexture.add('broken-heart', 0, 128, 9, 15, 13);
+        if (!paulineTexture.has('broken-heart')) paulineTexture.add('broken-heart', 0, 127, 9, 16, 13);
         this.conveyorPlatforms = layout.platforms.filter(platform => platform.frame === 'conveyor');
         this.conveyorTileSize = layout.tileSize;
         this.topConveyorY = Math.min(...this.conveyorPlatforms.map(platform => platform.y));
         this.bottomConveyorY = Math.max(...this.conveyorPlatforms.map(platform => platform.y));
         const pieTexture = this.textures.get('level-2-pie');
+        if (!pieTexture.has('oil-drum-body')) pieTexture.add('oil-drum-body', 0, 127, 0, 16, 17);
         if (!pieTexture.has('pie')) pieTexture.add('pie', 0, 0, 5, 18, 8);
         this.pies = [];
         const scoreTexture = this.textures.get('pickup-scores');
         if (!scoreTexture.has('300')) scoreTexture.add('300', 0, 48, 0, 24, 8);
-        const objectTexture = this.textures.get('level-2-objects');
+        const objectTexture = pieTexture;
         const objectFrames = {
-            hat: { x: 2, y: 8, width: 16, height: 9 },
-            purse: { x: 23, y: 8, width: 9, height: 9 },
-            umbrella: { x: 38, y: 2, width: 16, height: 15 }
+            hat: { x: 145, y: 8, width: 16, height: 9 },
+            purse: { x: 166, y: 8, width: 9, height: 9 },
+            umbrella: { x: 181, y: 2, width: 16, height: 15 }
         };
         for (const [name, frame] of Object.entries(objectFrames)) {
             if (!objectTexture.has(name)) {
                 objectTexture.add(name, 0, frame.x, frame.y, frame.width, frame.height);
             }
         }
-        const texture = this.textures.get('level-2-art');
         this.level = this.add.container(0, 0);
-        const addFrame = (name, x, y, width, height) => {
-            if (!texture.has(name)) texture.add(name, 0, x, y, width, height);
-        };
-        const addImage = (x, y, frame, textureKey = 'level-2-art') => {
+        const hammerTexture = this.textures.get('hammer');
+        if (!hammerTexture.has('pickup')) hammerTexture.add('pickup', 0, 5, 8, 9, 10);
+        const addImage = (x, y, frame, textureKey) => {
             const image = this.add.image(x, y, textureKey, frame).setOrigin(0);
             this.level.add(image);
             return image;
@@ -162,7 +159,7 @@ export default class Level2Scene extends Phaser.Scene {
                         x: support.x, y: support.y,
                         width: support.columns * layout.tileSize,
                         height: support.rows * layout.tileSize
-                    })));
+                    })), { mergeFlatPlatforms: true });
             } else if (object.name === 'kong') {
                 const belt = layout.platforms.find(platform => platform.frame === 'conveyor');
                 this.kong = this.add.sprite(object.x + object.width / 2, belt.y, 'kong', 0)
@@ -178,11 +175,10 @@ export default class Level2Scene extends Phaser.Scene {
                 // Exclude the painted flames from the reference image.
                 const drumHeight = 17;
                 const drumY = object.y + object.height - drumHeight;
-                addFrame('oil-drum-body', object.x, drumY, object.width, drumHeight);
-                this.oilBarrel = addImage(object.x, drumY, 'oil-drum-body');
+                this.oilBarrel = addImage(object.x, drumY, 'oil-drum-body', 'level-2-pie');
                 this.objects.set(object.name, this.oilBarrel);
                 this.oilFlame = this.add.sprite(object.x + object.width / 2,
-                    drumY + 2, 'fire', 9).setOrigin(0.5, 1).play('oil-flame');
+                    drumY + 2, 'fire', 8).setOrigin(0.5, 1).play('oil-flame');
                 this.level.add(this.oilFlame);
             } else if (object.name === 'pauline') {
                 this.pauline = this.add.sprite(object.x + object.width / 2,
@@ -213,10 +209,11 @@ export default class Level2Scene extends Phaser.Scene {
                 // Preserve the layout's center and baseline at the sprite's native size.
                 const x = object.x + (object.width - frame.width) / 2;
                 const y = object.y + object.height - frame.height;
-                this.objects.set(object.name, addImage(x, y, object.name, 'level-2-objects'));
-            } else {
-                addFrame(object.name, object.x, object.y, object.width, object.height);
-                this.objects.set(object.name, addImage(object.x, object.y, object.name));
+                this.objects.set(object.name, addImage(x, y, object.name, 'level-2-pie'));
+            } else if (object.name === 'hammer-upper' || object.name === 'hammer-lower') {
+                const x = object.x + (object.width - 9) / 2;
+                const y = object.y + object.height - 10;
+                this.objects.set(object.name, addImage(x, y, 'pickup', 'hammer'));
             }
         }
         this.heart = this.add.image(0, 0, 'pauline', 'heart').setVisible(false);
@@ -227,6 +224,8 @@ export default class Level2Scene extends Phaser.Scene {
             level: layout,
             heightAt: (x, platform) => platform.y,
             maxHunters: 6,
+            patrolRow: layout.platforms.findIndex(platform =>
+                platform.frame === 'conveyor' && platform.y === this.topConveyorY),
             spawnTarget: () => {
                 const startX = this.oilBarrel.x + this.oilBarrel.width / 2;
                 const x = startX + (Phaser.Math.Between(0, 1) === 0 ? -26 : 26);
@@ -262,7 +261,7 @@ export default class Level2Scene extends Phaser.Scene {
 
     schedulePaulineYell() {
         this.paulineYellTimer = this.time.delayedCall(Phaser.Math.Between(4000, 9000), () => {
-            if (!this.pauline?.active || this.endingStarted) return;
+            if (!this.pauline?.active || this.endingStarted || this.finished || this.marioDying) return;
             this.pauline.once('animationcomplete-pauline-yelling', () => {
                 this.pauline.setFrame(0);
                 this.paulineHelp.setVisible(false);
@@ -307,10 +306,17 @@ export default class Level2Scene extends Phaser.Scene {
         const right = left + belt.tiles * this.conveyorTileSize;
         const halfWidth = 9;
         const x = Phaser.Math.Between(0, 1) === 0 ? left + halfWidth : right - halfWidth;
+        if (this.isPieNearKong(x, belt.y, halfWidth)) return;
         const pie = this.add.image(x, belt.y, 'level-2-pie', 'pie').setOrigin(0.5, 1);
         pie.belt = belt;
         this.level.add(pie);
         this.pies.push(pie);
+    }
+
+    isPieNearKong(x, y, halfWidth) {
+        const margin = 8;
+        return this.kong && Math.abs(y - this.kong.y) <= 2 &&
+            Math.abs(x - this.kong.x) < this.kong.width / 2 + halfWidth + margin;
     }
 
     updatePies(delta) {
@@ -326,7 +332,8 @@ export default class Level2Scene extends Phaser.Scene {
                 pie.x + pie.width / 2 >= flame.x - flame.width / 2 &&
                 pie.x - pie.width / 2 <= flame.x + flame.width / 2 &&
                 pie.y >= flame.y - flame.height && pie.y - pie.height <= flame.y;
-            if (pie.x < belt.x || pie.x >= right || touchesFire) {
+            if (pie.x < belt.x || pie.x >= right || touchesFire ||
+                this.isPieNearKong(pie.x, pie.y, pie.width / 2)) {
                 pie.destroy();
                 this.pies.splice(index, 1);
             }
@@ -412,6 +419,14 @@ export default class Level2Scene extends Phaser.Scene {
                     this.events.off('shutdown', clearMask);
                     clearMask();
                     this.heart.setFrame('broken-heart');
+                    this.time.delayedCall(1200, () => {
+                        this.scene.launch('IntermissionScene', {
+                            height: 75, resumeGame: false,
+                            previousScene: 'Level2Scene', nextScene: 'Level3Scene',
+                            hudValues: { ...this.hud.values }
+                        });
+                        this.scene.sleep();
+                    });
                 }
             });
         });
@@ -463,7 +478,10 @@ export default class Level2Scene extends Phaser.Scene {
         const hitPie = this.pies.some(pie => pie.active &&
             Math.abs(this.mario.x - pie.x) < 5 + pie.width / 2 &&
             this.mario.y > pie.y - pie.height && this.mario.y - 16 < pie.y);
-        if (!hitPie) return false;
+        const hitFlame = this.fireHunters.hunters.some(({ sprite }) => sprite.active &&
+            Math.abs(this.mario.x - sprite.x) < 11 &&
+            this.mario.y > sprite.y - 14 && this.mario.y - 16 < sprite.y);
+        if (!hitPie && !hitFlame) return false;
         this.marioDying = true;
         this.marioMovementLocked = true;
         const lives = Math.max(0, this.hud.values.lives - 1);
@@ -547,7 +565,7 @@ export default class Level2Scene extends Phaser.Scene {
             sprite.destroy();
             return true;
         };
-        this.pies = this.pies.filter(pie => !smash(pie, pie.height / 2));
+        if (this.pies) this.pies = this.pies.filter(pie => !smash(pie, pie.height / 2));
         this.fireHunters.hunters = this.fireHunters.hunters.filter(hunter => {
             if (!smash(hunter.sprite, 7)) return true;
             hunter.hopTween?.stop();
@@ -578,6 +596,13 @@ export default class Level2Scene extends Phaser.Scene {
                 : direction !== 0 ? 'mario-run' : 'mario-idle';
             this.mario.play(animation, true);
             this.mario.anims.resume();
+        }
+        showLadderTransition(this.mario, this.marioPhysics);
+        const noInput = !['left', 'right', 'up', 'down', 'space']
+            .some(key => this.cursors[key].isDown);
+        if (noInput && this.marioPhysics.grounded && !this.marioPhysics.climbing &&
+            this.getConveyorVelocity?.(position.x, position.y)) {
+            this.mario.anims.pause();
         }
     }
 
