@@ -268,18 +268,34 @@ export default class Level4Scene extends Phaser.Scene {
 
     showVictoryReunion() {
         this.pauline.anims.stop();
-        this.pauline.setFrame(0).setFlipX(true);
-        this.mario.setPosition(this.pauline.x - 24, this.pauline.y)
-            .setVisible(true).setFlipX(false).play('mario-idle');
+        this.pauline.setFrame(0).setFlipX(false);
+        this.mario.setPosition(this.pauline.x + 24, this.pauline.y)
+            .setVisible(true).setFlipX(true).play('mario-idle');
         this.mario.setScale(this.pauline.displayHeight / this.mario.height);
         const texture = this.textures.get('pauline');
         if (!texture.has('heart')) texture.add('heart', 0, 110, 9, 15, 13);
         this.level.add(this.add.image((this.mario.x + this.pauline.x) / 2,
             this.pauline.y - this.pauline.displayHeight - 6, 'pauline', 'heart'));
-        this.level.add(this.add.text(112, 112, 'YOU WON! GAME OVER', {
-            fontFamily: 'monospace', fontSize: '10px', color: '#ffffff',
-            backgroundColor: '#000000', padding: { x: 4, y: 4 }
-        }).setOrigin(0.5));
+        this.level.add(this.add.rectangle(112, 120, 88, 32, 0x000000));
+        const font = this.textures.get('scorefont');
+        for (const [text, y] of [['YOU WON!', 108], ['GAME OVER', 124]]) {
+            const left = 112 - text.length * 4;
+            [...text].forEach((char, index) => {
+                const x = left + index * 8;
+                if (char === ' ') return;
+                if (char === '!') {
+                    this.level.add(this.add.rectangle(x + 3, y, 2, 4, 0x00ffff).setOrigin(0));
+                    this.level.add(this.add.rectangle(x + 3, y + 6, 2, 1, 0x00ffff).setOrigin(0));
+                    return;
+                }
+                const glyph = 10 + char.charCodeAt(0) - 65;
+                const frame = `victory-${char}`;
+                if (!font.has(frame)) font.add(frame, 0, (glyph % 10) * 8,
+                    Math.floor(glyph / 10) * 8, 8, 7);
+                this.level.add(this.add.image(x, y, 'scorefont', frame)
+                    .setOrigin(0).setTint(0x00ffff));
+            });
+        }
         this.time.delayedCall(4000, () => this.scene.start('SplashScene'));
     }
 

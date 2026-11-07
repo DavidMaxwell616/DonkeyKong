@@ -6,6 +6,7 @@ const Scene = vm.runInNewContext(fs.readFileSync('js/Level4Scene.js', 'utf8').re
 const drawable = (x = 0, y = 0) => ({ x, y, active: true, anims: { stop() {} },
     destroy() { this.active = false; }, setPosition(x, y) { this.x = x; this.y = y; return this; },
     setVisible(v) { this.visible = v; return this; }, setFlipX(v) { this.flipX = v; return this; },
+    setTint(v) { this.tint = v; return this; },
     setScale(v) { this.displayHeight = this.height * v; return this; },
     play(v) { this.animation = v; return this; }, setFrame(v) { this.frame = v; return this; }, setOrigin() { return this; } });
 const scene = new Scene();
@@ -22,8 +23,12 @@ const timers = [], tweens = [];
 scene.time = { delayedCall: (delay, callback) => timers.push(callback) };
 scene.tweens = { add: tween => tweens.push(tween) };
 scene.textures = { get: () => ({ has: () => true }) };
-let message, splash;
-scene.add = { image: drawable, text: (x, y, text) => { message = text; return drawable(x, y); } };
+let splash;
+const glyphs = [];
+scene.add = { rectangle: drawable, image: (x, y, key, frame) => {
+    if (key === 'scorefont') glyphs.push({ y, frame });
+    return drawable(x, y);
+} };
 scene.scene = { start: key => { splash = key; } };
 scene.clearHammer = () => {};
 scene.startVictorySequence();
@@ -50,9 +55,11 @@ timers.shift()();
 assert(scene.mario.visible);
 assert.equal(scene.mario.y, scene.pauline.y);
 assert.equal(scene.mario.displayHeight, scene.pauline.displayHeight);
-assert.equal(scene.mario.flipX, false);
-assert.equal(scene.pauline.flipX, true);
-assert.equal(message, 'YOU WON! GAME OVER');
+assert(scene.pauline.x < scene.mario.x);
+assert.equal(scene.mario.flipX, true);
+assert.equal(scene.pauline.flipX, false);
+assert.equal(glyphs.filter(g => g.y === 108).map(g => g.frame.slice(8)).join(''), 'YOUWON');
+assert.equal(glyphs.filter(g => g.y === 124).map(g => g.frame.slice(8)).join(''), 'GAMEOVER');
 timers.shift()();
 assert.equal(splash, 'SplashScene');
 console.log('PASS: sequential floor collapse, heap, Kong defeat, reunion, victory text and splash');
