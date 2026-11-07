@@ -1,3 +1,4 @@
+import GameAudio, { preloadAudio } from './GameAudio.js';
 import GameHud from './GameHud.js';
 import createRollerAnimations from './RollerAnimations.js';
 import createKongAnimations from './KongAnimations.js';
@@ -14,6 +15,7 @@ export default class Level2Scene extends Phaser.Scene {
     }
 
     preload() {
+        preloadAudio(this);
         this.load.spritesheet('hammer', 'assets/images/hammer.png', {
             frameWidth: 18, frameHeight: 18
         });
@@ -52,6 +54,7 @@ export default class Level2Scene extends Phaser.Scene {
     }
 
     create(data = {}) {
+        this.audioEffects = new GameAudio(this);
         this.endingStarted = false;
         this.marioDying = false;
         this.marioMovementLocked = false;
@@ -296,6 +299,7 @@ export default class Level2Scene extends Phaser.Scene {
             object.destroy();
             this.objects.delete(name);
             const score = this.hud.values.score + 300;
+            this.audioEffects?.play('point');
             this.hud.setValues({ score, highScore: Math.max(score, this.hud.values.highScore) });
         }
     }
@@ -499,6 +503,7 @@ export default class Level2Scene extends Phaser.Scene {
             if (lives > 0) this.scene.restart({ hudValues: { ...this.hud.values } });
             else this.scene.start('SplashScene');
         });
+        this.audioEffects?.play('die');
         this.mario.play('mario-dies');
         this.mario.anims.resume();
         return true;
@@ -561,6 +566,7 @@ export default class Level2Scene extends Phaser.Scene {
             const effect = this.add.sprite(sprite.x, sprite.y - halfHeight, 'hammer', 4);
             this.level.add(effect);
             effect.once('animationcomplete-barrel-destroy', () => effect.destroy());
+            this.audioEffects?.play('hammerhit');
             effect.play('barrel-destroy');
             sprite.destroy();
             return true;

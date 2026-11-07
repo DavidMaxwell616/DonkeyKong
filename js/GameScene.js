@@ -1,3 +1,4 @@
+import GameAudio, { preloadAudio } from './GameAudio.js';
 import createKongAnimations from './KongAnimations.js';
 import createBarrelAnimations from './BarrelAnimations.js';
 import createMarioAnimations, { showLadderTransition } from './MarioAnimations.js';
@@ -14,6 +15,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     preload() {
+        preloadAudio(this);
         this.load.spritesheet('hammer', 'assets/images/hammer.png', {
             frameWidth: 18,
             frameHeight: 18
@@ -54,6 +56,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     create(data = {}) {
+        this.audioEffects = new GameAudio(this);
         this.lives = data.lives ?? 3;
         this.marioDying = false;
         this.pauline = null;
@@ -198,6 +201,7 @@ export default class GameScene extends Phaser.Scene {
                 );
             },
             onComplete: () => {
+                this.audioEffects?.play('thump');
                 this.kong.setPosition(startX, landingY);
                 this.kong.anims.stop();
                 this.kong.setFrame(0);
@@ -263,6 +267,7 @@ export default class GameScene extends Phaser.Scene {
                 this.scene.sleep();
             });
             // The initial cycle plus two repeats makes three laughs.
+            this.audioEffects?.play('grunt');
             this.kong.play({ key: 'kong-laugh', repeat: 2 });
             return;
         }
@@ -285,6 +290,7 @@ export default class GameScene extends Phaser.Scene {
                 );
             },
             onComplete: () => {
+                this.audioEffects?.play('thump');
                 this.kong.setPosition(landingX, landingY);
                 this.applyGirderFrame(hopIndex, level, topGirder, miniGirder);
                 this.hopLeft(level, topGirder, miniGirder, hopIndex + 1);
@@ -510,6 +516,7 @@ export default class GameScene extends Phaser.Scene {
             const effect = this.add.sprite(x, y - 5, 'hammer', 4);
             this.level.add(effect);
             effect.once('animationcomplete-barrel-destroy', () => effect.destroy());
+            this.audioEffects?.play('hammerhit');
             effect.play('barrel-destroy');
         }
     }
@@ -527,6 +534,7 @@ export default class GameScene extends Phaser.Scene {
             // The second barrel brings this jump's total from 100 to 300.
             const points = this.jumpScoredBarrels.size === 2 ? 200 : 100;
             const score = this.hud.values.score + points;
+            this.audioEffects?.play('point');
             this.hud.setValues({ score, highScore: Math.max(score, this.hud.values.highScore) });
         }
     }
@@ -604,6 +612,7 @@ export default class GameScene extends Phaser.Scene {
                 this.scene.start('SplashScene');
             }
         });
+        this.audioEffects?.play('die');
         this.mario.play('mario-dies');
         this.mario.anims.resume();
         return true;

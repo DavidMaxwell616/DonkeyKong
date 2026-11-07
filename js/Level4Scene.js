@@ -1,3 +1,4 @@
+import GameAudio, { preloadAudio } from './GameAudio.js';
 import Level2Scene from './Level2Scene.js';
 import GameHud from './GameHud.js';
 import MarioPhysics from './MarioPhysics.js';
@@ -18,6 +19,7 @@ export default class Level4Scene extends Phaser.Scene {
     }
 
     create(data = {}) {
+        this.audioEffects = new GameAudio(this);
         const layout = this.cache.json.get('level-4');
         this.finished = false;
         this.objects = new Map();
@@ -197,6 +199,7 @@ export default class Level4Scene extends Phaser.Scene {
             if (lives > 0) this.scene.restart({ hudValues: { ...this.hud.values } });
             else this.scene.start('SplashScene');
         });
+        this.audioEffects?.play('die');
         this.mario.play('mario-dies');
         this.mario.anims.resume();
         return true;
@@ -212,6 +215,7 @@ export default class Level4Scene extends Phaser.Scene {
             rivet.tile.destroy();
             this.marioPhysics.world.destroyBody(rivet.body);
             const score = this.hud.values.score + 100;
+            this.audioEffects?.play('point');
             this.hud.setValues({ score, highScore: Math.max(score, this.hud.values.highScore) });
         }
         if (!this.rivets.every(rivet => rivet.removed)) return;
@@ -226,6 +230,7 @@ export default class Level4Scene extends Phaser.Scene {
     }
 
     startVictorySequence() {
+        this.audioEffects?.play('prefall');
         this.clearHammer();
         const layout = this.cache.json.get('level-4');
         const tileSize = layout.tileSize;
@@ -238,10 +243,12 @@ export default class Level4Scene extends Phaser.Scene {
         const dropFloor = index => {
             if (index === floors.length) {
                 this.kong.anims.stop();
+                this.audioEffects?.play('fall');
                 this.kong.setFrame(16);
                 this.level.bringToTop(this.kong);
                 this.tweens.add({ targets: this.kong, y: heapTop, duration: 1200,
                     ease: 'Quad.easeIn', onComplete: () => {
+                        this.audioEffects?.play('thump');
                         this.kong.play('kong-defeat');
                         this.time.delayedCall(600, () => this.showVictoryReunion());
                     } });

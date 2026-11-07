@@ -1,3 +1,4 @@
+import GameAudio, { preloadAudio } from './GameAudio.js';
 import Level2Scene from './Level2Scene.js';
 import GameHud from './GameHud.js';
 import MarioPhysics from './MarioPhysics.js';
@@ -24,6 +25,7 @@ export default class Level3Scene extends Phaser.Scene {
     }
 
     create(data = {}) {
+        this.audioEffects = new GameAudio(this);
         const layout = this.cache.json.get('level-3');
         this.finished = false;
         this.marioDying = false;
@@ -159,6 +161,7 @@ export default class Level3Scene extends Phaser.Scene {
         const sprite = this.add.sprite(entryX, platform.y - SPRING_HOP_HEIGHT, 'spring', 3)
             .setOrigin(0.5, 1);
         this.level.add(sprite);
+        this.audioEffects?.play('springcoin');
         this.springs.push({ sprite, startX, endX, dropX, elapsed: SPRING_HOP_DURATION / 2 });
     }
 
@@ -222,6 +225,7 @@ export default class Level3Scene extends Phaser.Scene {
             if (lives > 0) this.scene.restart({ hudValues: { ...this.hud.values } });
             else this.scene.start('SplashScene');
         });
+        this.audioEffects?.play('die');
         this.mario.play('mario-dies');
         this.mario.anims.resume();
         return true;
